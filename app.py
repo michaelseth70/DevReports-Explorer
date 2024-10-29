@@ -129,9 +129,9 @@ def main():
             year = row.get('year', 'Year not available')
             country = row.get('country', '').strip()
 
-            # Generate synthesis line
+            # Generate synthesis line and display it in bold
             synthesis = generate_synthesis(paragraph, topic)
-            st.write(f"**Insight**: {synthesis}")
+            st.write(f"**{synthesis}**")
 
             # Button to view full source
             if st.button(f"View Source ({organization}, {year})", key=f"view_source_{idx}"):
