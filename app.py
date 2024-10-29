@@ -134,7 +134,7 @@ def main():
 
             # Construct the reference with organization, country (if available), and year
             if country:
-                reference = f"({organization}, {country}, {year})"
+                reference = f"({organization} {country}, {year})"
             else:
                 reference = f"({organization}, {year})"
 
