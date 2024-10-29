@@ -215,7 +215,7 @@ def main():
             insight = generate_insight(paragraph, topic)
         
         # Display insight as a bold header of the same size as the paragraph text
-        st.markdown(f"**Insight:** {insight}")  # Display insight as bold text with label
+        st.markdown(f"### **Insight:** {insight}")  # Using '###' for header size similar to normal text
         
         # Display the paragraph
         st.write(f"{paragraph} {reference}")
