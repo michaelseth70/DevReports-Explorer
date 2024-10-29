@@ -82,7 +82,8 @@ def generate_insight(paragraph, topic):
             frequency_penalty=0,
             presence_penalty=0
         )
-        insight = response.choices[0].message['content'].strip()
+        # Correctly access the 'content' attribute using dot notation
+        insight = response.choices[0].message.content.strip()
     except openai.error.OpenAIError as e:
         insight = "Insight generation failed due to an API error."
         st.error(f"OpenAI API Error: {e}")
@@ -214,7 +215,7 @@ def main():
             insight = generate_insight(paragraph, topic)
         
         # Display insight as a bold header of the same size as the paragraph text
-        st.markdown(f"### **Insight:** {insight}")  # Using '###' for header size similar to normal text
+        st.markdown(f"**Insight:** {insight}")  # Display insight as bold text with label
         
         # Display the paragraph
         st.write(f"{paragraph} {reference}")
