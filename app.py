@@ -133,9 +133,15 @@ def main():
             synthesis = generate_synthesis(paragraph, topic)
             st.write(f"**{synthesis}**")
 
+            # Construct the reference with organization, country (if available), and year
+            if country:
+                reference = f"({organization}, {country}, {year})"
+            else:
+                reference = f"({organization}, {year})"
+
             # Button to view full source
-            if st.button(f"View Source ({organization}, {year})", key=f"view_source_{idx}"):
-                st.write(f"{paragraph} ({organization}, {year})")
+            if st.button(f"View Source {reference}", key=f"view_source_{idx}"):
+                st.write(f"{paragraph} {reference}")
         
         # Navigation Buttons
         col1, col2 = st.columns([1, 1])
