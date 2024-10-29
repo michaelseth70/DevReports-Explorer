@@ -66,7 +66,7 @@ def generate_insight(paragraph, topic):
     Caches the result to optimize performance and reduce API calls.
     """
     prompt = (
-        f"Provide a synthesis title related to '{topic}' based on the following paragraph:\n\n. dont add any quotations"
+        f"Provide a clear synthesis title related to '{topic}' based on the following paragraph:\n\n. dont add any quotations"
         f"{paragraph}\n\nInsight:"
     )
     try:
