@@ -66,7 +66,7 @@ def generate_insight(paragraph, topic):
     Caches the result to optimize performance and reduce API calls.
     """
     prompt = (
-        f"Provide a plain text one-line insigthful advice for me as someone that works in '{topic}' based on the following paragraph:\n\n"
+        f"Provide a plain text one-line insightful advice for me as someone that works in '{topic}' based on the following paragraph:\n\n"
         f"{paragraph}\n\nInsight:"
     )
     try:
@@ -164,31 +164,11 @@ def main():
             f"Showing results for **'{topic}'** in {total_paragraphs} results across {number_of_orgs} organisations."
         )
     
-        # Handle Navigation Buttons First
-        col1, col2 = st.columns([1, 1])
-    
-        # Previous Button
-        previous_clicked = col1.button("⬅️ Previous")
-        # Next Button
-        next_clicked = col2.button("Next ➡️")
-    
-        # Update the 'current_paragraph' based on button clicks
-        if previous_clicked:
-            if st.session_state.current_paragraph > 0:
-                st.session_state.current_paragraph -= 1
-        if next_clicked:
-            if st.session_state.current_paragraph < total_paragraphs - 1:
-                st.session_state.current_paragraph += 1
-    
-        # Ensure 'current_paragraph' is within bounds
-        if st.session_state.current_paragraph >= total_paragraphs:
-            st.session_state.current_paragraph = total_paragraphs - 1
-        if st.session_state.current_paragraph < 0:
-            st.session_state.current_paragraph = 0
-    
-        current_index = st.session_state.current_paragraph
+        # Handle Navigation Button Clicks
+        # (Logic remains unchanged; will be handled after displaying the paragraph)
     
         # Get the current paragraph data
+        current_index = st.session_state.current_paragraph
         paragraph_data = filtered_data.iloc[current_index]
     
         # Extract necessary fields
@@ -214,9 +194,31 @@ def main():
         # Display the paragraph
         st.write(f"{paragraph} {reference}")
     
-        # Progress Bar
-        progress = (current_index + 1) / total_paragraphs
-        st.progress(progress)
+        # Navigation Buttons (Moved Below Paragraph) # UPDATED
+        col1, col2 = st.columns([1, 1])
     
+        # Previous Button
+        previous_clicked = col1.button("⬅️ Previous")
+        # Next Button
+        next_clicked = col2.button("Next ➡️")
+    
+        # Update the 'current_paragraph' based on button clicks
+        if previous_clicked:
+            if st.session_state.current_paragraph > 0:
+                st.session_state.current_paragraph -= 1
+        if next_clicked:
+            if st.session_state.current_paragraph < total_paragraphs - 1:
+                st.session_state.current_paragraph += 1
+    
+        # Ensure 'current_paragraph' is within bounds
+        if st.session_state.current_paragraph >= total_paragraphs:
+            st.session_state.current_paragraph = total_paragraphs - 1
+        if st.session_state.current_paragraph < 0:
+            st.session_state.current_paragraph = 0
+    
+        # Progress Bar
+        progress = (st.session_state.current_paragraph + 1) / total_paragraphs
+        st.progress(progress)
+
 if __name__ == "__main__":
     main()
