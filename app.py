@@ -70,16 +70,19 @@ def generate_insight(paragraph, topic):
         f"{paragraph}\n\nInsight:"
     )
     try:
-        response = openai.Completion.create(
-            engine="text-davinci-003",  # You can choose a different model if preferred
-            prompt=prompt,
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",  # Choose a model such as gpt-3.5-turbo or gpt-4
+            messages=[
+                {"role": "system", "content": "You are an insightful analysis assistant."},
+                {"role": "user", "content": prompt}
+            ],
             max_tokens=100,
             temperature=0.7,
             top_p=1,
             frequency_penalty=0,
             presence_penalty=0
         )
-        insight = response.choices[0].text.strip()
+        insight = response.choices[0].message['content'].strip()
     except Exception as e:
         insight = "Insight generation failed."
         st.error(f"Error generating insight: {e}")
