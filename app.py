@@ -76,9 +76,8 @@ def generate_synthesis(paragraph, topic):
 def main():
     st.set_page_config(page_title="DevReport Explorer", layout="wide")
     
-    st.title("📚 DevReports Explorer")
-    heading_placeholder = st.empty()
-    st.sidebar.title("🔍 Explore Reports")
+    # Sidebar with the new title
+    st.sidebar.title("📚 DevReports Explorer")
 
     csv_files = [f for f in os.listdir('.') if f.endswith('.csv')]
     org_names = [os.path.splitext(f)[0] for f in csv_files]
@@ -106,14 +105,14 @@ def main():
     if not topic:
         total_paragraphs = len(df)
         number_of_orgs = df['organization'].nunique()
-        heading_placeholder.write(
+        st.write(
             f"Explore topics of interest in {total_paragraphs} results across {number_of_orgs} organisations."
         )
         st.info("Please enter a topic of interest to begin your search.")
     else:
         filtered_data = df[df['paragraph'].str.contains(topic, case=False, na=False)]
         if filtered_data.empty:
-            heading_placeholder.write("Explore topics of interest in 0 results across 0 organisations.")
+            st.write("Explore topics of interest in 0 results across 0 organisations.")
             st.warning(f"No paragraphs found for the topic '{topic}'. Please try a different topic.")
             st.stop()
     
