@@ -1,32 +1,13 @@
-# streamlit-app.py
-
 import streamlit as st
 import pandas as pd
 import os
 import openai
 from functools import lru_cache
 
-# --------------------------
-# Configuration and Setup
-# --------------------------
-
-# Set the page configuration
-st.set_page_config(
-    page_title="DevReports Explorer",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
-
 # Initialize OpenAI API using Streamlit secrets
 openai.api_key = st.secrets["openai"]["api_key"]
 
-# Constants
-RESULTS_PER_PAGE = 10
-
-# --------------------------
-# Caching Functions
-# --------------------------
-
+# Load the CSV files with caching
 @st.cache_data
 def load_data(selected_option, org_to_file):
     if selected_option == "All":
@@ -65,7 +46,8 @@ def load_data(selected_option, org_to_file):
             st.error(f"An error occurred while loading the data: {e}")
             st.stop()
 
-@st.cache_data(show_spinner=False, ttl=3600)
+# Generate AI insight for synthesis lines
+@st.cache_data(show_spinner=False)
 def generate_synthesis(paragraph, topic):
     prompt = (
         f"Provide a plain text one-line insightful summary for someone interested in '{topic}' based on the following paragraph:\n\n"
@@ -90,126 +72,87 @@ def generate_synthesis(paragraph, topic):
         st.error(f"Error generating synthesis: {e}")
     return synthesis
 
-# --------------------------
-# Helper Functions
-# --------------------------
-
-def get_org_files(data_dir='data'):
-    csv_files = [f for f in os.listdir(data_dir) if f.endswith('.csv')]
-    org_names = [os.path.splitext(f)[0] for f in csv_files]
-    org_to_file = dict(zip(org_names, csv_files))
-    return org_names, org_to_file
-
-# --------------------------
-# Main Application
-# --------------------------
-
+# Main function to run the Streamlit app
 def main():
-    # Inject custom CSS
-    # Streamlit automatically includes CSS from the assets folder
-    # Ensure that 'style.css' is placed inside the 'assets' folder
-
-    # Sidebar Configuration
-    with st.sidebar:
-        st.title("📚 DevReports Explorer")
-        org_names, org_to_file = get_org_files()
-        dropdown_options = ["All"] + org_names
-        selected_option = st.selectbox("Select Data Source:", options=dropdown_options, index=0)
-        topic = st.text_input("Enter a topic of interest:", value=st.session_state.get('topic', ''))
-
-        if 'current_start' not in st.session_state:
-            st.session_state.current_start = 0
-        if 'topic' not in st.session_state:
-            st.session_state.topic = ''
-
-        if st.session_state.topic != topic:
-            st.session_state.topic = topic
-            st.session_state.current_start = 0
-
-    # Main Content
-    st.markdown("<h1 style='text-align: center; color: #1a0dab;'>DevReports Explorer</h1>", unsafe_allow_html=True)
+    st.set_page_config(page_title="DevReport Explorer", layout="wide")
     
+    # Sidebar with the new title
+    st.sidebar.title("📚 DevReports Explorer")
+
+    csv_files = [f for f in os.listdir('.') if f.endswith('.csv')]
+    org_names = [os.path.splitext(f)[0] for f in csv_files]
+    dropdown_options = ["All"] + org_names
+    org_to_file = dict(zip(org_names, csv_files))
+    
+    selected_option = st.sidebar.selectbox("Select Data Source:", options=dropdown_options, index=0)
+    topic = st.sidebar.text_input("Enter a topic of interest:", value=st.session_state.get('topic', ''))
+    
+    if 'current_start' not in st.session_state:
+        st.session_state.current_start = 0
+    if 'topic' not in st.session_state:
+        st.session_state.topic = ''
+    
+    if st.session_state.topic != topic:
+        st.session_state.topic = topic
+        st.session_state.current_start = 0
+
     if selected_option:
         df = load_data(selected_option, org_to_file)
     else:
         st.error("No data source selected.")
         st.stop()
-
+    
     if not topic:
         total_paragraphs = len(df)
         number_of_orgs = df['organization'].nunique()
-        st.markdown(
-            f"<p style='text-align: center;'>Explore topics of interest in <strong>{total_paragraphs}</strong> results across <strong>{number_of_orgs}</strong> organisations.</p>",
-            unsafe_allow_html=True
+        st.write(
+            f"Explore topics of interest in {total_paragraphs} results across {number_of_orgs} organisations."
         )
         st.info("Please enter a topic of interest to begin your search.")
     else:
         filtered_data = df[df['paragraph'].str.contains(topic, case=False, na=False)]
         if filtered_data.empty:
-            st.markdown("<h3 style='text-align: center;'>No Results Found</h3>", unsafe_allow_html=True)
+            st.write("Explore topics of interest in 0 results across 0 organisations.")
             st.warning(f"No paragraphs found for the topic '{topic}'. Please try a different topic.")
             st.stop()
-
+    
         total_paragraphs = len(filtered_data)
-        total_pages = (total_paragraphs - 1) // RESULTS_PER_PAGE + 1
-
         start = st.session_state.current_start
-        end = start + RESULTS_PER_PAGE
+        end = start + 10
 
+        # Show next 10 results
         paginated_data = filtered_data.iloc[start:end]
-
-        # Display Search Results
         for idx, row in paginated_data.iterrows():
             paragraph = row['paragraph']
             organization = row.get('organization', 'Organization not available')
             year = row.get('year', 'Year not available')
             country = row.get('country', '').strip()
 
-            # Generate synthesis line
+            # Generate synthesis line and display it in bold
             synthesis = generate_synthesis(paragraph, topic)
+            st.write(f"**{synthesis}**")
 
-            # Construct reference
+            # Construct the reference with organization, country (if available), and year
             if country:
-                reference = f"{organization} {country}, {year}"
+                reference = f"({organization}, {country}, {year})"
             else:
-                reference = f"{organization}, {year}"
+                reference = f"({organization}, {year})"
 
-            # Render Search Result Card
-            with st.container():
-                st.markdown(
-                    f"""
-                    <div class="search-result">
-                        <div class="synthesis">{synthesis}</div>
-                        <div class="metadata">{reference}</div>
-                        <button class="view-source-button" onclick="document.getElementById('source-{idx}').classList.toggle('hidden')">View Source</button>
-                        <div id="source-{idx}" class="hidden" style="margin-top: 10px;">
-                            <p>{paragraph} ({reference})</p>
-                        </div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
+            # Button to view full source
+            if st.button(f"View Source {reference}", key=f"view_source_{idx}"):
+                st.write(f"{paragraph} {reference}")
+        
+        # Navigation Buttons
+        col1, col2 = st.columns([1, 1])
+        
+        if col1.button("⬅️ Previous", disabled=start == 0):
+            st.session_state.current_start = max(0, start - 10)
+        
+        if col2.button("Next ➡️", disabled=end >= total_paragraphs):
+            st.session_state.current_start = min(total_paragraphs, end)
 
-        # Pagination Controls
-        pagination_container = st.container()
-        with pagination_container:
-            cols = st.columns([1, 2, 1])
-            with cols[0]:
-                if st.button("⬅️ Previous"):
-                    st.session_state.current_start = max(0, start - RESULTS_PER_PAGE)
-                    st.experimental_rerun()
-            with cols[1]:
-                st.markdown(f"<p style='text-align: center;'>Page {start // RESULTS_PER_PAGE + 1} of {total_pages}</p>", unsafe_allow_html=True)
-            with cols[2]:
-                if st.button("Next ➡️"):
-                    st.session_state.current_start = min(start + RESULTS_PER_PAGE, total_paragraphs - RESULTS_PER_PAGE)
-                    st.experimental_rerun()
-
-            st.markdown(f"<p style='text-align: center;'>Showing {start + 1} to {min(end, total_paragraphs)} of {total_paragraphs} results.</p>", unsafe_allow_html=True)
-
-# --------------------------
-# Run the Application
-# --------------------------
+        # Display progress
+        st.write(f"Showing {start + 1} to {min(end, total_paragraphs)} of {total_paragraphs}")
 
 if __name__ == "__main__":
     main()
