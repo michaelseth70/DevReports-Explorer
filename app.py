@@ -72,9 +72,43 @@ def generate_synthesis(paragraph, topic):
         st.error(f"Error generating synthesis: {e}")
     return synthesis
 
+# Function to inject custom CSS
+def inject_custom_css():
+    custom_css = """
+    <style>
+    .search-result {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 16px;
+        transition: box-shadow 0.3s;
+    }
+    .search-result:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    .synthesis {
+        font-size: 18px;
+        font-weight: bold;
+        color: #1a0dab;
+    }
+    .metadata {
+        font-size: 14px;
+        color: #6a6a6a;
+        margin-top: 8px;
+    }
+    .view-source {
+        margin-top: 12px;
+    }
+    </style>
+    """
+    st.markdown(custom_css, unsafe_allow_html=True)
+
 # Main function to run the Streamlit app
 def main():
     st.set_page_config(page_title="DevReport Explorer", layout="wide")
+    
+    # Inject custom CSS
+    inject_custom_css()
     
     # Sidebar with the new title
     st.sidebar.title("📚 DevReports Explorer")
@@ -122,6 +156,7 @@ def main():
 
         # Show next 10 results
         paginated_data = filtered_data.iloc[start:end]
+        
         for idx, row in paginated_data.iterrows():
             paragraph = row['paragraph']
             organization = row.get('organization', 'Organization not available')
@@ -130,29 +165,38 @@ def main():
 
             # Generate synthesis line and display it in bold
             synthesis = generate_synthesis(paragraph, topic)
-            st.write(f"**{synthesis}**")
-
+            
             # Construct the reference with organization, country (if available), and year
             if country:
-                reference = f"({organization} {country}, {year})"
+                reference = f"{organization} {country}, {year}"
             else:
-                reference = f"({organization}, {year})"
-
-            # Button to view full source
-            if st.button(f"View Source {reference}", key=f"view_source_{idx}"):
-                st.write(f"{paragraph} {reference}")
+                reference = f"{organization}, {year}"
+            
+            # Use HTML to structure the search result
+            search_result_html = f"""
+            <div class="search-result">
+                <div class="synthesis">{synthesis}</div>
+                <div class="metadata">{reference}</div>
+                <div class="view-source">
+                    <button onclick="alert(`{paragraph} ({reference})`)" style="background-color: #f8f9fa; border: 1px solid #dcdcdc; padding: 8px 12px; border-radius: 4px; cursor: pointer;">View Source</button>
+                </div>
+            </div>
+            """
+            st.markdown(search_result_html, unsafe_allow_html=True)
         
         # Navigation Buttons
         col1, col2 = st.columns([1, 1])
         
         if col1.button("⬅️ Previous", disabled=start == 0):
             st.session_state.current_start = max(0, start - 10)
+            st.experimental_rerun()
         
         if col2.button("Next ➡️", disabled=end >= total_paragraphs):
             st.session_state.current_start = min(total_paragraphs, end)
+            st.experimental_rerun()
 
         # Display progress
-        st.write(f"Showing {start + 1} to {min(end, total_paragraphs)} of {total_paragraphs}")
+        st.write(f"Showing {start + 1} to {min(end, total_paragraphs)} of {total_paragraphs} results.")
 
 if __name__ == "__main__":
     main()
