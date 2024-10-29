@@ -76,8 +76,9 @@ def generate_synthesis(paragraph, topic):
 def main():
     st.set_page_config(page_title="DevReport Explorer", layout="wide")
     
-    # Sidebar with the new title
-    st.sidebar.title("📚 DevReports Explorer")
+    st.title("📚 DevReports Explorer")
+    heading_placeholder = st.empty()
+    st.sidebar.title("🔍 Explore Reports")
 
     csv_files = [f for f in os.listdir('.') if f.endswith('.csv')]
     org_names = [os.path.splitext(f)[0] for f in csv_files]
@@ -105,14 +106,14 @@ def main():
     if not topic:
         total_paragraphs = len(df)
         number_of_orgs = df['organization'].nunique()
-        st.write(
+        heading_placeholder.write(
             f"Explore topics of interest in {total_paragraphs} results across {number_of_orgs} organisations."
         )
         st.info("Please enter a topic of interest to begin your search.")
     else:
         filtered_data = df[df['paragraph'].str.contains(topic, case=False, na=False)]
         if filtered_data.empty:
-            st.write("Explore topics of interest in 0 results across 0 organisations.")
+            heading_placeholder.write("Explore topics of interest in 0 results across 0 organisations.")
             st.warning(f"No paragraphs found for the topic '{topic}'. Please try a different topic.")
             st.stop()
     
@@ -132,15 +133,9 @@ def main():
             synthesis = generate_synthesis(paragraph, topic)
             st.write(f"**{synthesis}**")
 
-            # Construct the reference with organization, country (if available), and year
-            if country:
-                reference = f"({organization}, {country}, {year})"
-            else:
-                reference = f"({organization}, {year})"
-
             # Button to view full source
-            if st.button(f"View Source {reference}", key=f"view_source_{idx}"):
-                st.write(f"{paragraph} {reference}")
+            if st.button(f"View Source ({organization}, {year})", key=f"view_source_{idx}"):
+                st.write(f"{paragraph} ({organization}, {year})")
         
         # Navigation Buttons
         col1, col2 = st.columns([1, 1])
