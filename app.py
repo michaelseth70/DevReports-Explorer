@@ -66,7 +66,7 @@ def generate_insight(paragraph, topic):
     Caches the result to optimize performance and reduce API calls.
     """
     prompt = (
-        f"Provide a one-sentence, straight to the point lessons related to the topic '{topic}' based on the following paragraph:\n\n"
+        f"Provide a one-sentence, straight to the point lessons for experts who work on the topic '{topic}' based on the following paragraph:\n\n"
         f"{paragraph}\n\nInsight:"
     )
     try:
